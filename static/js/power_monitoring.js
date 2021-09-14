@@ -3,7 +3,7 @@ const MONTH_STR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"
 $(document).ready(function () {
     $.ajax({
         type: "GET",
-        url: WEBUI + "/user/monitoring/data",
+        url: WEBUI + "/user/powermonitoring/data",
         dataType: 'json',
         success: function (data) {
             for (agent in data) {
@@ -157,7 +157,7 @@ function switchCons(select) {
 function updateChart(info, chart) {
     $.ajax({
         type: "GET",
-        url: WEBUI + "/user/monitoring/get/" + info.my_agent + "/" + info.my_switch + "/9s",
+        url: WEBUI + "/user/powermonitoring/get/" + info.my_agent + "/" + info.my_switch + "/9s",
         dataType: 'json',
         success: function (data) {
             let m_data = {};

@@ -618,13 +618,13 @@ def env_register():
         return flask.redirect("/user/envfactory?msg=wrong filetype")
 
 
-@b_user.route("/monitoring")
+@b_user.route("/powermonitoring")
 @login_required
 def user_monitoring():
-    return flask.render_template("switch_monitoring.html", admin = current_user.is_admin, active_btn = "user_monitoring")
+    return flask.render_template("power_monitoring.html", admin = current_user.is_admin, active_btn = "user_power")
 
 
-def monitoring_data_helper(switch_name=None, period_str=None):
+def power_data_helper(switch_name=None, period_str=None):
     result = node_list_helper()["nodes"]
     node_data = {}
     # Retrieve the name of the nodes
@@ -664,7 +664,7 @@ def monitoring_data_helper(switch_name=None, period_str=None):
                     "consumption": float(cons["consumption"])
                 })
         else:
-            logging.error("Can not retrieve switch monitoring values from agent '%s' (status code: %d)" %
+            logging.error("Can not retrieve power monitoring values from agent '%s' (status code: %d)" %
                     (agent_name, r.status_code))
     close_session(db)
     # Remove the switch ports without consumptions or with every consumption equal to 0
@@ -688,14 +688,14 @@ def monitoring_data_helper(switch_name=None, period_str=None):
     return node_data
 
 
-@b_user.route("/monitoring/data")
+@b_user.route("/powermonitoring/data")
 @login_required
-def user_monitoring_data(switch_name=None, period_str=None):
-        return json.dumps(monitoring_data_helper(switch_name, period_str))
+def user_power_data(switch_name=None, period_str=None):
+        return json.dumps(power_data_helper(switch_name, period_str))
 
 
-# Do the same thing than the monitoring_data_helper without authentication
-def monitoring_get_helper(agent_name, switch_name, period):
+# Do the same thing than the power_data_helper() without authentication
+def power_get_helper(agent_name, switch_name, period):
     result = {}
     # Check the period unit: s (seconds), m (minutes), h (hours), d (days)
     last_char = period[-1]
@@ -759,17 +759,17 @@ def monitoring_get_helper(agent_name, switch_name, period):
     return result
 
 
-@b_user.route("/monitoring/get/<agent>/<switch>/<period>")
-def user_monitoring_get(agent, switch, period):
-    return json.dumps(monitoring_get_helper(agent, switch, period), indent = 4)
+@b_user.route("/powermonitoring/get/<agent>/<switch>/<period>")
+def user_power_get(agent, switch, period):
+    return json.dumps(power_get_helper(agent, switch, period), indent = 4)
 
 
-@b_user.route("/monitoring/download", methods=["POST"])
+@b_user.route("/powermonitoring/download", methods=["POST"])
 @login_required
-def user_monitoring_download():
+def user_power_download():
     form_data = flask.request.form
-    data = monitoring_data_helper(form_data["switch"], form_data["period"])
-    data_path = "rasp_data/%s/monitoring_data.json" % current_user.email
+    data = power_data_helper(form_data["switch"], form_data["period"])
+    data_path = "rasp_data/%s/power_data.json" % current_user.email
     dir_path = "rasp_data/%s" % current_user.email
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)

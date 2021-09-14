@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block other_js %}
-	<script src="/static/js/switch_monitoring.js"></script>
+	<script src="/static/js/power_monitoring.js"></script>
 	<script src="/static/js/chart.js"></script>
 {% endblock %}
 {% block content %}
@@ -18,7 +18,7 @@
         </div>
 		<div id="charts" class="text-center mt-2">
 		</div>
-        <form action="/user/monitoring/download" method="post" class="ml-2 mt-3 text-center">
+        <form action="/user/powermonitoring/download" method="post" class="ml-2 mt-3 text-center">
             <span>Download the monitoring data (JSON):</span>
             <input id="switch-name" type="hidden" name="switch">
             <br/>
