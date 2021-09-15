@@ -620,7 +620,7 @@ def env_register():
 
 @b_user.route("/powermonitoring")
 @login_required
-def user_monitoring():
+def power_monitoring():
     return flask.render_template("power_monitoring.html", admin = current_user.is_admin, active_btn = "user_power")
 
 
@@ -770,6 +770,137 @@ def user_power_download():
     form_data = flask.request.form
     data = power_data_helper(form_data["switch"], form_data["period"])
     data_path = "rasp_data/%s/power_data.json" % current_user.email
+    dir_path = "rasp_data/%s" % current_user.email
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path)
+    with open(data_path, "w") as fd:
+        json.dump(data, fd, indent = 4)
+    return flask.send_file(data_path, as_attachment = True)
+
+
+@b_user.route("/tempmonitoring")
+@login_required
+def temp_monitoring():
+    return flask.render_template("temp_monitoring.html", admin = current_user.is_admin, active_btn = "user_temp")
+
+
+def temp_data_helper(agent_name=None, period_str=None):
+    # Add the temperature consumption
+    node_data = {}
+    db = open_session()
+    if agent_name is None or len(agent_name) == 0:
+        agent_list = db.query(Agent
+            ).filter(Agent.type == "raspberry"
+            ).filter(Agent.state == "connected"
+            ).all()
+    else:
+        agent_list = db.query(Agent
+            ).filter(Agent.type == "raspberry"
+            ).filter(Agent.state == "connected"
+            ).filter(Agent.name == agent_name
+            ).all()
+    for agent in agent_list:
+        r_data = post_data(db, current_user.email, agent.type, agent.token)
+        if isinstance(period_str, str) and len(period_str) > 0:
+            r_data["period"] = period_str
+        r = requests.post(url = "http://%s:%s/v1/user/node/temperature" % (agent.ip, agent.port),
+            timeout = POST_TIMEOUT, json = r_data)
+        if r.status_code == 200:
+            r_json = r.json()
+            for cons in r_json:
+                if agent.name not in node_data:
+                    node_data[agent.name] = {}
+                node_name = cons["node"]
+                if node_name not in node_data[agent.name]:
+                    node_data[agent.name][node_name] = { "consumptions": [] }
+                node_data[agent.name][node_name]["consumptions"].append({
+                    "time": cons["time"],
+                    "consumption": cons["consumption"]
+                })
+        else:
+            logging.error("Can not retrieve temperature monitoring values from agent '%s' (status code: %d)" %
+                    (agent.name, r.status_code))
+    close_session(db)
+    # Remove the switch ports without consumptions or with every consumption equal to 0
+    for agent in list(node_data.keys()):
+        agent_w_cons = False
+        for node in list(node_data[agent].keys()):
+            node_w_cons = False
+            for cons in node_data[agent][node]["consumptions"]:
+                if cons["consumption"] > 0:
+                    node_w_cons = True
+                    agent_w_cons = True
+            if not node_w_cons:
+                del node_data[agent][node]
+        if not agent_w_cons:
+            del node_data[agent]
+    return node_data
+
+
+@b_user.route("/tempmonitoring/data")
+@login_required
+def user_temp_data(period_str=None):
+        return json.dumps(temp_data_helper(period_str=period_str))
+
+
+# Do the same thing than the temp_data_helper() without authentication
+def temp_get_helper(agent_name, period):
+    result = {}
+    # Check the period unit: s (seconds), m (minutes), h (hours), d (days)
+    last_char = period[-1]
+    if last_char not in [ "s", "m", "h", "d" ]:
+        return {"error": "wrong unit for the period parameter"}
+    # Get the agent information
+    db = open_session()
+    agent = db.query(Agent
+            ).filter(Agent.state == "connected"
+            ).filter(Agent.name == agent_name
+            ).first()
+    if agent is None:
+        close_session(db)
+        return json.dumps({ "error": "agent '%s' does not exist" % agent_name })
+    r_data = post_data(db, current_user.email, agent.type, agent.token)
+    if isinstance(period, str) and len(period) > 0:
+        r_data["period"] = period
+    r = requests.post(url = "http://%s:%s/v1/user/node/temperature" % (agent.ip, agent.port),
+        timeout = POST_TIMEOUT, json = r_data)
+    if r.status_code == 200:
+        r_json = r.json()
+        for cons in r_json:
+            node_name = cons["node"]
+            if node_name not in result:
+                result[node_name] = { "consumptions": [] }
+            result[node_name]["consumptions"].append({
+                "time": cons["time"],
+                "consumption": cons["consumption"]
+            })
+    else:
+        logging.error("Can not retrieve temperature monitoring values from agent '%s' (status code: %d)" %
+                (agent.name, r.status_code))
+    close_session(db)
+    # Remove the switch ports without consumptions or with every consumption equal to 0
+    for node in list(result.keys()):
+        node_w_cons = False
+        for cons in result[node]["consumptions"]:
+            if cons["consumption"] > 0:
+                node_w_cons = True
+        if not node_w_cons:
+            del result[node]
+    close_session(db)
+    return result
+
+
+@b_user.route("/tempmonitoring/get/<agent>/<period>")
+def user_temp_get(agent, period):
+    return json.dumps(temp_get_helper(agent, period), indent = 4)
+
+
+@b_user.route("/tempmonitoring/download", methods=["POST"])
+@login_required
+def user_temp_download():
+    form_data = flask.request.form
+    data = temp_data_helper(form_data["agent"], form_data["period"])
+    data_path = "rasp_data/%s/temp_data.json" % current_user.email
     dir_path = "rasp_data/%s" % current_user.email
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path)

@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 {% block other_js %}
-	<script src="/static/js/power_monitoring.js"></script>
+	<script src="/static/js/temp_monitoring.js"></script>
 	<script src="/static/js/chart.js"></script>
 {% endblock %}
 {% block content %}
     <div class="bg-white shadow monitoring">
-        <center><h4>Power Monitoring</h4></center>
+        <center><h4>Temperature Monitoring</h4></center>
         {% if request.args.get('msg') %}
             <div class="alert alert-danger">
                 {{request.args.get('msg')}}
             </div>
         {% endif %}
         <div class="ml-2">
-            <span>Select your Switch</span>
-            <select id="switch-list" name="switch_name" onchange="switchCons(this)">
+            <span>Select your Agent</span>
+            <select id="agent-list" name="agent_name" onchange="agentCons(this)">
             </select>
         </div>
 		<div id="charts" class="text-center mt-2">
 		</div>
-        <form action="/user/powermonitoring/download" method="post" class="ml-2 mt-3 text-center">
+        <form action="/user/tempmonitoring/download" method="post" class="ml-2 mt-3 text-center">
             <span>Download the monitoring data (JSON):</span>
-            <input id="switch-name" type="hidden" name="switch">
+            <input id="agent-name" type="hidden" name="agent">
             <br/>
             <select name="period">
                 <option value="30m">For the last 30 minutes</option>
