@@ -24,7 +24,7 @@ $(document).ready(function () {
             for (let node in NODES) {
                 // Get the properties with values to build the filters
                 for (let prop in NODES[node]) {
-                    if(NODES[node][prop] != null && NODES[node][prop].length > 0) {
+                    if(NODES[node][prop] != null && String(NODES[node][prop]).length > 0) {
                         if(!(prop in PROPERTIES)) {
                             PROPERTIES[prop] = new Set();
                         }
