@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block other_js %}
+	<script src="/static/js/smtp.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow smtp">
+    <center><h4>SMTP Configuration</h4></center>
+    <div class="bg-info rounded-right title">
+        SMTP Server Configuration
+    </div>
+    <div class="description">
+        When the SMTP server is enabled, emails are sent to users after their
+        account creation. The emails include a link to confirm the user account
+        without administrator intervention. In this case, administrators are not
+        notified when user accounts are created.
+
+        To limit the email addresses authorize to log in, use the Email filter
+        section.
+    </div>
+    {% if request.args.get('msg') %}
+        <div class="alert alert-danger" role="alert">
+            {{ request.args.get('msg') }}
+        </div>
+    {% endif %}
+    {% if conf["enabled"] %}
+        <div class="warn-msg bg-success">Server is enabled. Emails with confirmation
+            links are sent to new users.</div>
+    {% else %}
+        <div class="warn-msg bg-danger">Server is disabled. Administrators must confirm
+            user accounts.</div>
+    {% endif %}
+    <div>
+    <form action="/admin/smtp/configure" method="post" class="container">
+        <div class="row">
+            <div class="col-3">
+                SMTP Server Address
+            </div>
+            <div class="col-3">
+                <input type="text" name="address" placeholder="stmp.imt.fr" value="{{conf["address"]}}" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                SMTP Server Port
+            </div>
+            <div class="col-3">
+                <input type="number" name="port" placeholder="587" value="{{conf["port"]}}" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                SMTP Account User
+            </div>
+            <div class="col-3">
+                <input type="text" name="account" placeholder="remy.pottier@imt.fr" value="{{conf["account"]}}" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                SMTP Account Password
+            </div>
+            <div class="col-3">
+                <input type="text" name="password" placeholder="ACCOUNT_PASSWORD" required>
+            </div>
+            <div class="col">
+                <i>passwords are encrypted before being stored in the database</i>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                Authorized Emails
+            </div>
+            <div class="col-3">
+                <input name="emailfilter" type="text" placeholder="imt.fr,inria.fr,ls2n.fr" value="{{conf["emailfilter"]}}">
+            </div>
+            <div class="col">
+                <i>domain names separated by comma</i>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-3">
+                Enable SMTP server
+            </div>
+            <div class="col-3">
+                <select name="enabled">
+                    {% if conf["enabled"] %}
+                        <option value=1 selected>Enabled</option>
+                        <option value=0>Disabled</option>
+                    {% else %}
+                        <option value=1>Enabled</option>
+                        <option value=0 selected>Disabled</option>
+                    {% endif %}
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col text-center">
+                <button type="submit" value="submit" class="btn btn-info">Update</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

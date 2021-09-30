@@ -1,6 +1,7 @@
 from api.tool import sort_by_name
+from cryptography.fernet import Fernet
 from database.connector import open_session, close_session, row2elem, row2dict
-from database.tables import User, Agent
+from database.tables import Agent, User, Smtp
 from flask_login import current_user, login_required
 from glob import glob
 from lib.config_loader import load_config
@@ -17,6 +18,61 @@ def admin_required(f):
             flask.abort(403)
         return f(*args, **kwargs)
     return decorated_function
+
+# SMTP server management
+@b_admin.route("/smtp")
+@login_required
+@admin_required
+def smtp_server():
+    result = {}
+    db = open_session()
+    smtp = db.query(Smtp).first()
+    if smtp is None:
+        for c in Smtp.__table__.columns:
+            result[str(c).split(".")[1]] = ""
+    else:
+        result["address"] = smtp.server_address
+        result["port"] = smtp.server_port
+        result["account"] = smtp.account
+        result["password"] = smtp.password
+        result["emailfilter"] = smtp.email_filter
+        result["enabled"] = smtp.enabled
+    close_session(db)
+    return flask.render_template("smtp.html", admin = current_user.is_admin,
+        active_btn = "admin_smtp", conf=result)
+
+
+@b_admin.route("/smtp/configure", methods=[ "POST" ])
+@login_required
+@admin_required
+def smtp_configure():
+    msg = ""
+    db = open_session()
+    form_data = flask.request.form
+    if "address" not in form_data or "port" not in form_data or \
+        "account" not in form_data or "password" not in form_data:
+            msg = "Missing parameters: 'address', 'port', 'account', 'password' are required"
+    if len(msg) == 0:
+        smtp = db.query(Smtp).first()
+        if smtp is None:
+            smtp = Smtp()
+            db.add(smtp)
+        smtp.server_address = form_data["address"]
+        smtp.server_port = form_data["port"]
+        smtp.account = form_data["account"]
+        with open("secret.key", "rb") as keyfile:
+            key = keyfile.read()
+            encoded_pwd = form_data["password"].encode()
+            f = Fernet(key)
+            smtp.password = f.encrypt(encoded_pwd).decode()
+        smtp.email_filter = form_data["emailfilter"]
+        if form_data["enabled"] == "1":
+            smtp.enabled = True
+        else:
+            smtp.enabled = False
+        msg = "SMTP configuration updated!"
+    close_session(db)
+    return flask.redirect("/admin/smtp?msg=%s" % msg)
 
 
 # User Management

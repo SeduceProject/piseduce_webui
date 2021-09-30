@@ -1,4 +1,5 @@
 {
+    "public_address": "https://pi.seduce.fr",
     "port_number": 9000,
     "pwd_secret_key": "oneSecretKey",
     "db_url": "sqlite:///test-ui.db"

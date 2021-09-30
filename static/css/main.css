@@ -818,3 +818,55 @@
     word-wrap: break-word;
     overflow-y: auto;
 }
+
+/** SMTP Configuration panel **/
+.smtp {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.smtp .title {
+    width: 300px;
+    padding-right: 30px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: white;
+    text-align: right;
+}
+
+.smtp .description {
+    width: 800px;
+    margin: auto;
+    margin-bottom: 20px;
+    text-align: justify;
+}
+
+.smtp .warn-msg {
+    width: 800px;
+    margin: auto;
+    margin-bottom: 20px;
+    padding: 3px;
+}
+
+.smtp .container {
+    margin-left: 10px;
+}
+
+.smtp .col-3:first-child {
+    height: 50px;
+    padding-top: 3px;
+}
+
+.smtp .col {
+    padding-top: 3px;
+}
+
+.smtp select {
+    width: 214px;
+    height: 30px;
+}
+
+.smtp .btn {
+    width: 300px;
+}

@@ -54,3 +54,13 @@ class Agent(Base):
 
     def __repr__(self):
         return "Agent(%s, %s, %s)" % (self.name, self.type, self.state)
+
+
+class Smtp(Base):
+    __tablename__ = "smtp"
+    server_address = Column(Text, primary_key=True)
+    server_port = Column(Integer)
+    account = Column(Text)
+    password = Column(Text)
+    email_filter = Column(Text)
+    enabled = Column(Boolean, default=False)
