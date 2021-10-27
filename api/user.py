@@ -391,6 +391,9 @@ def make_exec():
                     agent_name, json_data["reconfiguration"]))
                 result["errors"].append("wrong answer from the agent '%s'" % agent_name)
         close_session(db)
+    else:
+        logging.error(
+            "Missing parameters in POST data: 'nodes' and 'configuration' are required")
     return json.dumps(result)
 
 
